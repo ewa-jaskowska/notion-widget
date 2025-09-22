@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>My Widget - Clock</title>
+  <title>Mój widget - Zegar</title>
   <style>
     body {
       font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
@@ -13,17 +13,17 @@
       flex-direction: column;
       height: 100vh;
       margin: 0;
-      background: transparent; /* brak tła strony */
+      background: transparent;
     }
 
     .card {
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* odcienie szarości */
-      background: linear-gradient(135deg, #f0f0f0, #d6d6d6);
+      background: rgba(255, 255, 255, 0.9);
+      /* zmniejszony padding i szerokość */
       padding: 20px 30px;
-      max-width: 250px;
+      max-width: 250px;          /* maksymalna szerokość karty */
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       transition: all 0.3s ease;
@@ -37,13 +37,13 @@
 
     #time {
       font-size: 2.5rem;
-      color: #333; /* ciemnoszary tekst */
+      color: #4b3f2f;
     }
 
     #date {
       margin-top: 10px;
       font-size: 1rem;
-      color: #333;
+      color: #4b3f2f;
     }
   </style>
 </head>
@@ -54,15 +54,13 @@
   </div>
 
   <script>
-    // dni tygodnia po angielsku
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
     function updateTime(){
       const now = new Date();
       document.getElementById('time').textContent = now.toLocaleTimeString();
-
       const dayName = days[now.getDay()];
-      const dateString = now.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+      const dateString = now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
       document.getElementById('date').textContent = `${dayName}, ${dateString}`;
     }
 
