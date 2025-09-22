@@ -3,61 +3,118 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Work Timer Widget</title>
+<title>Work Timer — poprawiony wygląd</title>
 <style>
   :root{
-    --card-bg: linear-gradient(135deg,#f0f0f0,#d6d6d6);
+    --card-bg-start: #fbfbfb;
+    --card-bg-end: #e9e9e9;
+    --card-border: rgba(0,0,0,0.06);
+    --muted: #6b6b6b;
     --text: #222;
-    --accent: #4b3f2f;
+    --accent: #3a3a3a; /* neutralny akcent */
+    --primary-bg: #2f2f2f;
+    --primary-fg: #ffffff;
+    --gap: 10px;
   }
-  html,body{height:100%;margin:0;background:transparent;font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif}
-  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+
+  /* layout */
+  html,body{height:100%;margin:0;background:transparent;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,'Helvetica Neue',sans-serif}
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
   .card{
     width:100%;
-    max-width:340px;
-    background:var(--card-bg);
-    padding:16px;
-    border-radius:16px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.10);
+    max-width:360px;
+    background: linear-gradient(180deg,var(--card-bg-start),var(--card-bg-end));
+    border:1px solid var(--card-border);
+    padding:18px;
+    border-radius:14px;
+    box-shadow:0 10px 30px rgba(22,22,22,0.06);
     color:var(--text);
     box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:var(--gap);
   }
 
-  .title{font-weight:600;color:var(--accent);margin:0 0 8px 0;text-align:center}
+  /* header */
+  .title{margin:0;font-size:0.95rem;font-weight:700;color:var(--accent);text-align:center;letter-spacing:0.2px}
+
+  /* timer */
   .timer{
-    font-size:2.2rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+    font-size:2.1rem;
     text-align:center;
-    margin:6px 0 10px;
+    margin:6px 0 0;
     font-variant-numeric:tabular-nums;
+    color:var(--accent);
+    background: rgba(255,255,255,0.0);
+    padding:6px 4px;
   }
 
-  .controls{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  /* controls */
+  .controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
   .controls button{
-    background:#fff;border:1px solid rgba(0,0,0,0.08);padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:600;
-    box-shadow:0 6px 14px rgba(0,0,0,0.04);min-width:74px;
+    -webkit-tap-highlight-color: transparent;
+    appearance:none;border:1px solid rgba(0,0,0,0.06);
+    background: #ffffff;
+    color:var(--accent);
+    padding:8px 10px;border-radius:9px;cursor:pointer;font-weight:700;font-size:0.9rem;
+    box-shadow:0 6px 12px rgba(0,0,0,0.04);
+    min-width:78px;
+    transition:transform .08s ease, box-shadow .12s ease, background .12s ease, opacity .12s ease;
   }
-  .controls button.primary{background:#4b3f2f;color:#fff;border:none}
-  .controls button.warn{background:#fff3cd}
-  .controls button:active{transform:translateY(1px)}
+  .controls button:hover{transform:translateY(-2px)}
+  .controls button:focus{outline:3px solid rgba(60,60,60,0.08);outline-offset:2px}
 
-  .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .controls button.primary{
+    background:var(--primary-bg);color:var(--primary-fg);border:none;
+  }
+  .controls button.warn{
+    background:#fff7e6;color:#6a4b00;border:1px solid rgba(106,75,0,0.06);
+  }
+
+  .controls button[disabled]{
+    opacity:0.45;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+  }
+
+  /* input */
+  .row{display:flex;gap:8px;align-items:center}
   .row input[type="text"]{
-    flex:1;padding:8px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);background:rgba(255,255,255,0.9)
+    flex:1;padding:9px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);
+    background:rgba(255,255,255,0.95);font-size:0.95rem;color:var(--text);
+    box-sizing:border-box;
   }
-  .small{font-size:0.9rem;color:#333;text-align:center;margin-bottom:8px}
-  .meta{display:flex;justify-content:space-between;align-items:center;font-size:0.9rem;margin-bottom:8px}
-  .log{max-height:200px;overflow:auto;background:rgba(255,255,255,0.85);padding:8px;border-radius:10px;border:1px solid rgba(0,0,0,0.04)}
-  table{width:100%;border-collapse:collapse;font-size:0.9rem}
-  th,td{padding:6px 6px;text-align:left;border-bottom:1px solid rgba(0,0,0,0.04)}
-  th{font-weight:700;color:var(--accent)}
-  .actions{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
-  .muted{color:#666;font-size:0.85rem;text-align:center;margin-top:6px}
+  .row input::placeholder{color:var(--muted)}
 
-  @media (max-width:420px){
-    .card{padding:12px}
-    .timer{font-size:1.8rem}
-    .controls button{min-width:64px;padding:7px 8px}
+  /* meta */
+  .meta{display:flex;justify-content:space-between;align-items:center;font-size:0.87rem;color:var(--muted);gap:8px}
+  .meta strong{color:var(--accent);font-weight:700}
+
+  /* log */
+  .muted{font-size:0.85rem;color:var(--muted);text-align:left;margin-top:4px}
+  .log{
+    max-height:170px;overflow:auto;background:rgba(255,255,255,0.92);padding:8px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);
   }
+  table{width:100%;border-collapse:collapse;font-size:0.9rem}
+  thead th{font-weight:700;color:var(--accent);text-align:left;padding:6px 6px 8px 6px;position:sticky;top:0;background:transparent}
+  td{padding:6px 6px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--muted)}
+  tbody tr:last-child td{border-bottom:none}
+  .tiny{font-size:0.8rem;color:var(--muted)}
+
+  /* actions */
+  .actions{display:flex;gap:8px;justify-content:center;margin-top:8px}
+  .actions button{padding:8px 10px;border-radius:9px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer}
+  .actions button:active{transform:translateY(1px)}
+
+  /* responsive */
+  @media (max-width:420px){
+    .card{padding:12px;max-width:320px}
+    .timer{font-size:1.7rem}
+    .controls button{min-width:64px;padding:7px 8px;font-size:0.85rem}
+  }
+
 </style>
 </head>
 <body>
@@ -66,21 +123,21 @@
       <h3 class="title">Work Timer — śledzenie czasu</h3>
 
       <div class="row">
-        <input id="taskName" type="text" placeholder="Nazwa zadania (np. Raport Q3)" />
+        <input id="taskName" type="text" placeholder="Nazwa zadania (np. Raport Q3)" aria-label="Task name" />
       </div>
 
-      <div id="timerDisplay" class="timer">00:00:00</div>
+      <div id="timerDisplay" class="timer" aria-live="polite">00:00:00</div>
 
       <div class="controls" role="group" aria-label="Timer controls">
-        <button id="startBtn" class="primary">Start ▶</button>
-        <button id="pauseBtn">Pause ⏸</button>
-        <button id="stopBtn" class="warn">Stop ⏹</button>
-        <button id="resetBtn">Reset ↺</button>
+        <button id="startBtn" class="primary" type="button">Start ▶</button>
+        <button id="pauseBtn" type="button">Pause ⏸</button>
+        <button id="stopBtn" class="warn" type="button">Stop ⏹</button>
+        <button id="resetBtn" type="button">Reset ↺</button>
       </div>
 
       <div class="meta">
-        <div class="small">Status: <span id="statusText">stopped</span></div>
-        <div class="small">Dziś: <strong id="todaySum">00:00:00</strong></div>
+        <div class="tiny">Status: <strong id="statusText">stopped</strong></div>
+        <div class="tiny">Dziś: <strong id="todaySum">00:00:00</strong></div>
       </div>
 
       <div class="muted">Zapisane sesje</div>
@@ -92,8 +149,8 @@
       </div>
 
       <div class="actions">
-        <button id="exportBtn">Export CSV ⤓</button>
-        <button id="clearBtn">Clear Log 🗑️</button>
+        <button id="exportBtn" type="button">Export CSV ⤓</button>
+        <button id="clearBtn" type="button">Clear Log 🗑️</button>
       </div>
     </div>
   </div>
@@ -107,4 +164,198 @@
     const h = Math.floor(total/3600);
     const m = Math.floor((total%3600)/60);
     const s = total%60;
-    return [h,m,s].map(n=>String(n).padSt
+    return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':');
+  }
+
+  function todayISO(date=new Date()){
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+
+  // ---- DOM ----
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const statusText = document.getElementById('statusText');
+  const taskNameInput = document.getElementById('taskName');
+  const logTableBody = document.querySelector('#logTable tbody');
+  const todaySumEl = document.getElementById('todaySum');
+  const exportBtn = document.getElementById('exportBtn');
+  const clearBtn = document.getElementById('clearBtn');
+
+  // ---- State ----
+  let running = false;
+  let startTs = null;
+  let accMs = 0; // accumulated before current run
+  let tickInterval = null;
+
+  // ---- Persistence ----
+  function loadSessions(){
+    try{
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function saveSessions(sessions){
+    localStorage.setItem(storageKey, JSON.stringify(sessions));
+  }
+
+  // ---- UI updates ----
+  function renderTimerDisplay(){
+    const elapsed = accMs + (running && startTs ? Date.now() - startTs : 0);
+    timerDisplay.textContent = msToHMS(elapsed);
+  }
+
+  function renderLog(){
+    const sessions = loadSessions();
+    logTableBody.innerHTML = '';
+    sessions.slice().reverse().forEach(s=>{
+      const tr = document.createElement('tr');
+      const tdTask = document.createElement('td');
+      tdTask.textContent = s.task || '(untitled)';
+      const tdDur = document.createElement('td');
+      tdDur.textContent = msToHMS(s.duration);
+      const tdDate = document.createElement('td');
+      const d = new Date(s.start);
+      tdDate.textContent = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+      tr.appendChild(tdTask); tr.appendChild(tdDur); tr.appendChild(tdDate);
+      logTableBody.appendChild(tr);
+    });
+    renderTodaySum();
+  }
+
+  function renderStatus(){
+    // status text
+    statusText.textContent = running ? 'running' : (accMs>0 ? 'paused' : 'stopped');
+
+    // button states & labels
+    if(running){
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      pauseBtn.textContent = 'Pause ⏸';
+      stopBtn.disabled = false;
+      resetBtn.disabled = true;
+    } else {
+      startBtn.disabled = false;
+      startBtn.textContent = 'Start ▶';
+      pauseBtn.disabled = true;
+      pauseBtn.textContent = 'Pause ⏸';
+      stopBtn.disabled = (accMs === 0);
+      resetBtn.disabled = (accMs === 0);
+    }
+  }
+
+  function renderTodaySum(){
+    const sessions = loadSessions();
+    const today = todayISO();
+    const total = sessions.reduce((acc,s)=>{
+      const sDate = new Date(s.start);
+      if(todayISO(sDate) === today) return acc + s.duration;
+      return acc;
+    },0);
+    todaySumEl.textContent = msToHMS(total);
+  }
+
+  // ---- Actions ----
+  function startTimer(){
+    if(running) return;
+    running = true;
+    startTs = Date.now();
+    tickInterval = setInterval(renderTimerDisplay, 250);
+    renderTimerDisplay();
+    renderStatus();
+  }
+
+  function pauseTimer(){
+    if(!running) return;
+    accMs += Date.now() - startTs;
+    startTs = null;
+    running = false;
+    clearInterval(tickInterval);
+    renderTimerDisplay();
+    renderStatus();
+  }
+
+  function resetTimer(){
+    running = false;
+    startTs = null;
+    accMs = 0;
+    clearInterval(tickInterval);
+    renderTimerDisplay();
+    renderStatus();
+  }
+
+  function stopAndSave(){
+    // finalize running
+    if(running){
+      accMs += Date.now() - startTs;
+      running = false;
+      startTs = null;
+      clearInterval(tickInterval);
+    }
+    const duration = accMs;
+    if(duration <= 0) { resetTimer(); return; }
+
+    const task = taskNameInput.value.trim() || '(untitled)';
+    const start = Date.now() - duration;
+    const session = { task, start, duration };
+
+    const sessions = loadSessions();
+    sessions.push(session);
+    saveSessions(sessions);
+
+    // reset timer state
+    accMs = 0;
+    renderLog();
+    renderTimerDisplay();
+    renderStatus();
+  }
+
+  function exportCSV(){
+    const sessions = loadSessions();
+    if(!sessions.length) { alert('Brak sesji do eksportu.'); return; }
+    const header = ['task','start_iso','duration_seconds'];
+    const rows = sessions.map(s=>[ `"${(s.task||'').replace(/"/g,'""')}"`, new Date(s.start).toISOString(), Math.round(s.duration/1000) ]);
+    const csv = [header.join(','), ...rows.map(r=>r.join(','))].join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `work_sessions_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearLog(){
+    if(!confirm('Czy usunąć wszystkie zapisane sesje?')) return;
+    localStorage.removeItem(storageKey);
+    renderLog();
+  }
+
+  // ---- Events ----
+  startBtn.addEventListener('click', startTimer);
+  pauseBtn.addEventListener('click', pauseTimer);
+  resetBtn.addEventListener('click', ()=>{ if(confirm('Resetować licznik?')) resetTimer(); });
+  stopBtn.addEventListener('click', ()=>{ if(confirm('Zatrzymać i zapisać sesję?')) stopAndSave(); });
+  exportBtn.addEventListener('click', exportCSV);
+  clearBtn.addEventListener('click', clearLog);
+
+  // keyboard shortcuts: Space = start/pause, Enter = stop&save
+  document.addEventListener('keydown', (e)=>{
+    if(e.target.tagName === 'INPUT') return;
+    if(e.code === 'Space'){ e.preventDefault(); running ? pauseTimer() : startTimer(); }
+    if(e.code === 'Enter'){ e.preventDefault(); stopAndSave(); }
+  });
+
+  // init
+  renderLog();
+  renderTimerDisplay();
+  renderStatus();
+</script>
+</body>
+</html>
