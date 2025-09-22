@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Work Timer z zadaniami</title>
+<title>Work Timer z szarymi ikonami</title>
 <style>
-html,body{margin:0;padding:0;height:100%;font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;background:transparent;}
+html,body{margin:0;padding:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:transparent;}
 .wrap{display:flex;align-items:center;justify-content:center;height:100vh;}
 .card{
   background: linear-gradient(135deg,#f0f0f0,#d6d6d6);
@@ -16,7 +16,7 @@ html,body{margin:0;padding:0;height:100%;font-family: 'Segoe UI', Roboto, Arial,
   text-align:center;
 }
 .title{font-size:1rem;font-weight:600;color:#3a3a3a;margin-bottom:10px;}
-input#taskName{padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px solid #ccc;font-size:0.95rem;}
+input#taskName{width:100%;padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px solid #ccc;font-size:0.95rem;}
 #timerDisplay{
   font-size:2rem;
   margin:10px 0;
@@ -31,12 +31,16 @@ input#taskName{padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px s
   font-weight:600;
   cursor:pointer;
   background:#fff;
-  color:#2b2b2b;
   box-shadow:0 4px 10px rgba(0,0,0,0.05);
   transition:0.1s;
+  font-size:1.1rem;
 }
+/* Ikonki w odcieniach szarości */
+#playBtn{color:#2b2b2b;}   /* ciemnoszary */
+#stopBtn{color:#555555;}   /* średnioszary */
+#resetBtn{color:#888888;}  /* jasny szary */
+
 .controls button:hover{transform:translateY(-1px);}
-.controls button.primary{background:#2b2b2b;color:#fff;}
 .taskList{margin-top:12px;text-align:left;max-height:180px;overflow:auto;}
 .taskItem{display:flex;justify-content:space-between;align-items:center;background:#e0e0e0;padding:4px 8px;margin-bottom:4px;border-radius:6px;font-size:0.9rem;}
 .taskItem button{flex:0 0 auto;padding:2px 6px;font-size:0.8rem;border-radius:6px;border:none;background:#2b2b2b;color:#fff;cursor:pointer;}
@@ -49,9 +53,9 @@ input#taskName{padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px s
     <input id="taskName" type="text" placeholder="Task Name">
     <div id="timerDisplay">00:00:00</div>
     <div class="controls">
-      <button id="playBtn" class="primary">Play</button>
-      <button id="stopBtn">Stop</button>
-      <button id="resetBtn">Reset</button>
+      <button id="playBtn" title="Start ▶️">▶️</button>
+      <button id="stopBtn" title="Stop ⏹️">⏹️</button>
+      <button id="resetBtn" title="Reset ↺">↺</button>
     </div>
     <div class="taskList" id="taskList"></div>
   </div>
@@ -136,7 +140,6 @@ function saveCurrentTask(){
   if(!currentTask) return;
   currentTask.duration = accMs;
   let tasks = loadTasks();
-  // jeśli istnieje zadanie o tej samej nazwie, aktualizujemy
   const idx = tasks.findIndex(t=>t.name===currentTask.name);
   if(idx>=0){ tasks[idx] = currentTask; } else { tasks.push(currentTask); }
   saveTasks(tasks);
@@ -167,7 +170,6 @@ function renderTaskList(){
 playBtn.addEventListener('click', startTimer);
 stopBtn.addEventListener('click', stopTimer);
 resetBtn.addEventListener('click', resetTimer);
-
 window.addEventListener('beforeunload', ()=>{ saveCurrentTask(); });
 
 renderTaskList();
