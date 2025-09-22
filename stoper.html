@@ -3,147 +3,108 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Minimal Work Timer</title>
+<title>Work Timer Widget</title>
 <style>
-  :root{
-    --card-bg: #efefef;
-    --accent: #222;
-    --muted: #666;
-  }
-
-  /* layout */
-  html,body{height:100%;margin:0;background:transparent;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
-
-  /* card */
+  html,body{margin:0;padding:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:transparent;}
+  .wrap{display:flex;align-items:center;justify-content:center;height:100vh;}
   .card{
-    width:100%; max-width:220px;
-    background:var(--card-bg);
-    border-radius:10px;
-    padding:12px;
-    box-sizing:border-box;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:8px;
+    background: linear-gradient(135deg,#f0f0f0,#d6d6d6);
+    border-radius:16px;
+    padding:20px;
+    width:250px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.1);
+    text-align:center;
   }
-
-  /* timer - monospace, większe cyfry */
+  .title{font-size:1rem;font-weight:600;color:#3a3a3a;margin-bottom:10px;}
   #timerDisplay{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,'Roboto Mono',monospace;
     font-size:2rem;
-    letter-spacing:0.08em; /* luz między grupami zamiast kropek */
-    color:var(--accent);
-    margin:0;
-    line-height:1;
+    margin:10px 0;
+    color:#2b2b2b;
   }
-
-  /* small label for separators (visually hidden semantically) */
-  .sep{opacity:0.35;font-weight:600;font-size:0.95rem; margin:0 2px}
-
-  /* controls - single primary button + tiny reset */
-  .controls{display:flex;gap:8px;align-items:center}
-  .btn{
-    padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);
-    background:white;color:var(--accent);cursor:pointer;font-weight:700;font-size:0.9rem;
+  .controls{display:flex;gap:8px;justify-content:center;margin-top:10px;}
+  .controls button{
+    flex:1;
+    padding:8px 0;
+    border-radius:10px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    background:#fff;
+    color:#2b2b2b;
+    box-shadow:0 4px 10px rgba(0,0,0,0.05);
+    transition:0.1s;
   }
-  .btn.primary{background:var(--accent);color:#fff;border:none}
-  .btn:active{transform:translateY(1px)}
-  .btn:disabled{opacity:0.5;cursor:not-allowed}
-
-  /* tiny reset */
-  .reset{background:transparent;border:none;color:var(--muted);font-size:0.9rem;cursor:pointer;padding:4px}
-  .reset:active{transform:translateY(1px)}
-
-  /* very small screens */
-  @media (max-width:260px){
-    .card{max-width:200px;padding:10px}
-    #timerDisplay{font-size:1.6rem}
-  }
+  .controls button:hover{transform:translateY(-1px);}
+  .controls button.primary{background:#2b2b2b;color:#fff;}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" role="region" aria-label="Minimalny timer pracy">
-      <!-- Timer: pokazuje HH MM SS (bez kropek/dwukropków) -->
-      <div id="timerDisplay" aria-live="polite">00 00 00</div>
-
-      <div class="controls" role="group" aria-label="Kontrolki timera">
-        <button id="toggleBtn" class="btn primary" type="button">Start</button>
-        <button id="resetBtn" class="reset" type="button" title="Resetuj licznik">Reset</button>
-      </div>
+<div class="wrap">
+  <div class="card">
+    <div class="title">Work Timer</div>
+    <div id="timerDisplay">00:00:00</div>
+    <div class="controls">
+      <button id="playBtn" class="primary">Play</button>
+      <button id="stopBtn">Stop</button>
+      <button id="resetBtn">Reset</button>
     </div>
   </div>
+</div>
 
 <script>
-  // Minimalny timer: Start/Stop toggle + Reset
-  let running = false;
-  let startTs = null;
-  let accMs = 0;
-  let tickInterval = null;
+let running = false;
+let startTs = null;
+let accMs = 0;
+let interval = null;
 
-  const display = document.getElementById('timerDisplay');
-  const toggleBtn = document.getElementById('toggleBtn');
-  const resetBtn = document.getElementById('resetBtn');
+const timerDisplay = document.getElementById('timerDisplay');
+const playBtn = document.getElementById('playBtn');
+const stopBtn = document.getElementById('stopBtn');
+const resetBtn = document.getElementById('resetBtn');
 
-  function pad(n){ return String(n).padStart(2,'0'); }
+function pad(n){return String(n).padStart(2,'0');}
 
-  function msToParts(ms){
-    const total = Math.floor(ms/1000);
-    const h = Math.floor(total/3600);
-    const m = Math.floor((total%3600)/60);
-    const s = total%60;
-    return {h,m,s};
-  }
+function updateDisplay(){
+  const elapsed = accMs + (running && startTs ? Date.now() - startTs : 0);
+  const h = Math.floor(elapsed/3600000);
+  const m = Math.floor((elapsed%3600000)/60000);
+  const s = Math.floor((elapsed%60000)/1000);
+  timerDisplay.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
 
-  function render(){
-    const elapsed = accMs + (running && startTs ? Date.now() - startTs : 0);
-    const {h,m,s} = msToParts(elapsed);
-    // zamiast ":" używamy spacji jako separatora (bez kropek)
-    display.textContent = `${pad(h)} ${pad(m)} ${pad(s)}`;
-  }
+function startTimer(){
+  if(running) return;
+  running = true;
+  startTs = Date.now();
+  playBtn.disabled = true;
+  interval = setInterval(updateDisplay, 250);
+}
 
-  function start(){
-    if(running) return;
-    running = true;
-    startTs = Date.now();
-    toggleBtn.textContent = 'Stop';
-    tickInterval = setInterval(render, 250);
-    render();
-  }
+function stopTimer(){
+  if(!running) return;
+  accMs += Date.now() - startTs;
+  startTs = null;
+  running = false;
+  playBtn.disabled = false;
+  clearInterval(interval);
+  updateDisplay();
+}
 
-  function stop(){
-    if(!running) return;
-    accMs += Date.now() - startTs;
-    startTs = null;
-    running = false;
-    clearInterval(tickInterval);
-    toggleBtn.textContent = 'Start';
-    render();
-  }
+function resetTimer(){
+  running = false;
+  startTs = null;
+  accMs = 0;
+  clearInterval(interval);
+  playBtn.disabled = false;
+  updateDisplay();
+}
 
-  function resetAll(){
-    if(confirm('Resetować licznik?')) {
-      running = false;
-      startTs = null;
-      accMs = 0;
-      clearInterval(tickInterval);
-      toggleBtn.textContent = 'Start';
-      render();
-    }
-  }
+playBtn.addEventListener('click', startTimer);
+stopBtn.addEventListener('click', stopTimer);
+resetBtn.addEventListener('click', resetTimer);
 
-  toggleBtn.addEventListener('click', ()=>{ running ? stop() : start(); });
-  resetBtn.addEventListener('click', resetAll);
-
-  // keyboard: Space toggles (when not focusing inputs)
-  document.addEventListener('keydown', (e)=>{
-    if(e.target.tagName === 'INPUT' || e.target.isContentEditable) return;
-    if(e.code === 'Space'){ e.preventDefault(); running ? stop() : start(); }
-  });
-
-  // initial render
-  render();
+updateDisplay();
 </script>
 </body>
 </html>
