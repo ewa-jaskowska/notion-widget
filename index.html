@@ -12,26 +12,31 @@
       justify-content: center;
       height: 100vh;
       margin: 0;
-      /* miękki gradient w tle */
-      background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
+      /* gradient w odcieniach szarości, beżu i złota */
+      background: linear-gradient(135deg, #dcd5c9, #f1e6d0, #bfb6a8);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
     }
 
     #time {
       font-size: 3rem;
-      color: #333;
-      background: #fff;
+      color: #4b3f2f; /* ciemny, złotawy brąz */
+      background: rgba(255, 255, 255, 0.9);
       padding: 30px 50px;
       border-radius: 20px;
-      /* cień */
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      /* delikatne przejście */
       transition: all 0.3s ease;
     }
 
-    /* efekt świecenia po najechaniu */
     #time:hover {
       box-shadow: 0 12px 35px rgba(0,0,0,0.15);
       transform: scale(1.02);
+    }
+
+    @keyframes gradientShift {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
     }
   </style>
 </head>
