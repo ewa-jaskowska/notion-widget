@@ -3,78 +3,98 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Work Timer Widget</title>
+<title>Work Timer z zadaniami</title>
 <style>
-  html,body{margin:0;padding:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:transparent;}
-  .wrap{display:flex;align-items:center;justify-content:center;height:100vh;}
-  .card{
-    background: linear-gradient(135deg,#f0f0f0,#d6d6d6);
-    border-radius:16px;
-    padding:20px;
-    width:250px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.1);
-    text-align:center;
-  }
-  .title{font-size:1rem;font-weight:600;color:#3a3a3a;margin-bottom:10px;}
-  #timerDisplay{
-    font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,'Roboto Mono',monospace;
-    font-size:2rem;
-    margin:10px 0;
-    color:#2b2b2b;
-  }
-  .controls{display:flex;gap:8px;justify-content:center;margin-top:10px;}
-  .controls button{
-    flex:1;
-    padding:8px 0;
-    border-radius:10px;
-    border:none;
-    font-weight:600;
-    cursor:pointer;
-    background:#fff;
-    color:#2b2b2b;
-    box-shadow:0 4px 10px rgba(0,0,0,0.05);
-    transition:0.1s;
-  }
-  .controls button:hover{transform:translateY(-1px);}
-  .controls button.primary{background:#2b2b2b;color:#fff;}
+html,body{margin:0;padding:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:transparent;}
+.wrap{display:flex;align-items:center;justify-content:center;height:100vh;}
+.card{
+  background: linear-gradient(135deg,#f0f0f0,#d6d6d6);
+  border-radius:16px;
+  padding:20px;
+  width:300px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.1);
+  text-align:center;
+}
+.title{font-size:1rem;font-weight:600;color:#3a3a3a;margin-bottom:10px;}
+input#taskName{width:100%;padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px solid #ccc;font-size:0.95rem;}
+#timerDisplay{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,'Roboto Mono',monospace;
+  font-size:2rem;
+  margin:10px 0;
+  color:#2b2b2b;
+}
+.controls{display:flex;gap:8px;justify-content:center;margin-top:10px;}
+.controls button{
+  flex:1;
+  padding:8px 0;
+  border-radius:10px;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+  background:#fff;
+  color:#2b2b2b;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  transition:0.1s;
+}
+.controls button:hover{transform:translateY(-1px);}
+.controls button.primary{background:#2b2b2b;color:#fff;}
+.taskList{margin-top:12px;text-align:left;max-height:180px;overflow:auto;}
+.taskItem{display:flex;justify-content:space-between;align-items:center;background:#e0e0e0;padding:4px 8px;margin-bottom:4px;border-radius:6px;font-size:0.9rem;}
+.taskItem button{flex:0 0 auto;padding:2px 6px;font-size:0.8rem;border-radius:6px;border:none;background:#2b2b2b;color:#fff;cursor:pointer;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
     <div class="title">Work Timer</div>
+    <input id="taskName" type="text" placeholder="Task Name">
     <div id="timerDisplay">00:00:00</div>
     <div class="controls">
       <button id="playBtn" class="primary">Play</button>
       <button id="stopBtn">Stop</button>
       <button id="resetBtn">Reset</button>
     </div>
+    <div class="taskList" id="taskList"></div>
   </div>
 </div>
 
 <script>
-let running = false;
-let startTs = null;
-let accMs = 0;
-let interval = null;
-
 const timerDisplay = document.getElementById('timerDisplay');
 const playBtn = document.getElementById('playBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
+const taskNameInput = document.getElementById('taskName');
+const taskListDiv = document.getElementById('taskList');
 
-function pad(n){return String(n).padStart(2,'0');}
+let running = false;
+let startTs = null;
+let accMs = 0;
+let interval = null;
+let currentTask = null;
+
+const STORAGE_KEY = 'work_timer_tasks';
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function msToHMS(ms){
+  const h=Math.floor(ms/3600000);
+  const m=Math.floor((ms%3600000)/60000);
+  const s=Math.floor((ms%60000)/1000);
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
 
 function updateDisplay(){
   const elapsed = accMs + (running && startTs ? Date.now() - startTs : 0);
-  const h = Math.floor(elapsed/3600000);
-  const m = Math.floor((elapsed%3600000)/60000);
-  const s = Math.floor((elapsed%60000)/1000);
-  timerDisplay.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  timerDisplay.textContent = msToHMS(elapsed);
 }
 
+// ---- Timer actions ----
 function startTimer(){
   if(running) return;
+  if(!currentTask) {
+    const name = taskNameInput.value.trim();
+    if(!name) { alert("Podaj nazwę zadania"); return; }
+    currentTask = { name, duration: accMs };
+  }
   running = true;
   startTs = Date.now();
   playBtn.disabled = true;
@@ -87,23 +107,71 @@ function stopTimer(){
   startTs = null;
   running = false;
   playBtn.disabled = false;
-  clearInterval(interval);
   updateDisplay();
+  saveCurrentTask();
 }
 
 function resetTimer(){
   running = false;
   startTs = null;
   accMs = 0;
-  clearInterval(interval);
+  interval && clearInterval(interval);
   playBtn.disabled = false;
+  currentTask = null;
   updateDisplay();
 }
 
+// ---- Task storage ----
+function loadTasks(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e){ return []; }
+}
+
+function saveTasks(tasks){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+}
+
+function saveCurrentTask(){
+  if(!currentTask) return;
+  currentTask.duration = accMs;
+  let tasks = loadTasks();
+  // jeśli istnieje zadanie o tej samej nazwie, aktualizujemy
+  const idx = tasks.findIndex(t=>t.name===currentTask.name);
+  if(idx>=0){ tasks[idx] = currentTask; } else { tasks.push(currentTask); }
+  saveTasks(tasks);
+  renderTaskList();
+}
+
+// ---- Render ----
+function renderTaskList(){
+  const tasks = loadTasks();
+  taskListDiv.innerHTML = '';
+  tasks.forEach(t=>{
+    const div = document.createElement('div');
+    div.className='taskItem';
+    div.innerHTML = `<span>${t.name} - ${msToHMS(t.duration)}</span>`;
+    const btn = document.createElement('button');
+    btn.textContent = 'Continue';
+    btn.onclick = ()=>{
+      accMs = t.duration;
+      currentTask = {...t};
+      updateDisplay();
+    };
+    div.appendChild(btn);
+    taskListDiv.appendChild(div);
+  });
+}
+
+// ---- Event listeners ----
 playBtn.addEventListener('click', startTimer);
 stopBtn.addEventListener('click', stopTimer);
 resetBtn.addEventListener('click', resetTimer);
 
+window.addEventListener('beforeunload', ()=>{ saveCurrentTask(); });
+
+renderTaskList();
 updateDisplay();
 </script>
 </body>
