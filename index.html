@@ -10,9 +10,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
       height: 100vh;
       margin: 0;
-      /* gradient w odcieniach szarości, beżu i złota */
       background: linear-gradient(135deg, #dcd5c9, #f1e6d0, #bfb6a8);
       background-size: 400% 400%;
       animation: gradientShift 15s ease infinite;
@@ -26,11 +26,22 @@
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       transition: all 0.3s ease;
+      text-align: center;
     }
 
     #time:hover {
       box-shadow: 0 12px 35px rgba(0,0,0,0.15);
       transform: scale(1.02);
+    }
+
+    #date {
+      margin-top: 15px;
+      font-size: 1.2rem;
+      color: #4b3f2f;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.08);
     }
 
     @keyframes gradientShift {
@@ -42,11 +53,22 @@
 </head>
 <body>
   <div id="time"></div>
+  <div id="date"></div>
+
   <script>
+    const days = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+
     function updateTime(){
       const now = new Date();
+      // godzina
       document.getElementById('time').textContent = now.toLocaleTimeString();
+
+      // dzień tygodnia + data
+      const dayName = days[now.getDay()];
+      const dateString = now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('date').textContent = `${dayName}, ${dateString}`;
     }
+
     setInterval(updateTime, 1000);
     updateTime();
   </script>
