@@ -5,76 +5,86 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Work Timer z szarymi ikonami</title>
 <style>
-html,body{margin:0;padding:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:transparent;}
-.wrap{display:flex;align-items:center;justify-content:center;height:100vh;}
-.card{
-  background: linear-gradient(135deg,#f0f0f0,#d6d6d6);
-  border-radius:16px;
-  padding:20px;
-  width:300px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.1);
-  text-align:center;
-}
-.title{font-size:1rem;font-weight:600;color:#3a3a3a;margin-bottom:10px;}
-input#taskName{padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px solid #ccc;font-size:0.95rem;}
-#timerDisplay{
-  font-size:2rem;
-  margin:10px 0;
-  color:#2b2b2b;
-}
-.controls{display:flex;gap:8px;justify-content:center;margin-top:10px;}
-.controls button{
-  flex:1;
-  padding:8px 0;
-  border-radius:10px;
-  border:none;
-  font-weight:600;
-  cursor:pointer;
-  background:#fff;
-  box-shadow:0 4px 10px rgba(0,0,0,0.05);
-  transition:0.1s;
-  font-size:1.1rem;
-}
-/* Ikonki w odcieniach szarości */
-#playBtn{color:#2b2b2b;}   /* ciemnoszary */
-#stopBtn{color:#555555;}   /* średnioszary */
-#resetBtn{color:#888888;}  /* jasny szary */
+  html,body{margin:0;padding:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:transparent;}
+  .wrap{display:flex;align-items:center;justify-content:center;height:100vh;}
+  .card{
+    background: linear-gradient(135deg,#f0f0f0,#d6d6d6);
+    border-radius:16px;
+    padding:20px;
+    width:320px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.1);
+    text-align:center;
+  }
+  .title{font-size:1rem;font-weight:600;color:#3a3a3a;margin-bottom:10px;}
+  input#taskName{padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px solid #ccc;font-size:0.95rem;width:100%;box-sizing:border-box;}
+  #timerDisplay{
+    font-size:2rem;
+    margin:10px 0;
+    color:#2b2b2b;
+  }
+  .controls{display:flex;gap:8px;justify-content:center;margin-top:10px;}
+  .controls button{
+    flex:1;
+    padding:8px 0;
+    border-radius:10px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    background:#fff;
+    box-shadow:0 4px 10px rgba(0,0,0,0.05);
+    transition:0.1s;
+    font-size:1.1rem;
+  }
+  /* Ikonki w odcieniach szarości */
+  #playBtn{color:#2b2b2b;}   /* ciemnoszary */
+  #stopBtn{color:#555555;}   /* średnioszary */
+  #resetBtn{color:#888888;}  /* jasny szary */
 
-.controls button:hover{transform:translateY(-1px);}
-.taskList{margin-top:12px;text-align:left;max-height:180px;overflow:auto;}
-.taskItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #e0e0e0;
-  padding: 4px 8px;
-  margin-bottom: 4px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-}
-.taskItem .actions {
-  display: flex;
-  gap: 6px;
-  margin-left: auto;
-}
-.taskItem .actions button {
-  flex: 0 0 auto;
-  padding: 2px 4px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.taskItem .actions button svg {
-  width: 18px;
-  height: 18px;
-}
-.taskItem .actions button:hover {
-  transform: scale(1.1);
-}
-.taskItem button{flex:0 0 auto;padding:2px 6px;font-size:0.8rem;border-radius:6px;border:none;background:#2b2b2b;color:#fff;cursor:pointer;}
+  .controls button:hover{transform:translateY(-1px);}
+  .taskList{margin-top:12px;text-align:left;max-height:180px;overflow:auto;padding-right:4px;}
+  .taskItem{
+    display:flex;
+    align-items:center;
+    background:#e0e0e0;
+    padding:6px 8px;
+    margin-bottom:6px;
+    border-radius:6px;
+    font-size:0.9rem;
+  }
+  .taskItem .text{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1 1 auto;
+    margin-right:8px;
+  }
+  .taskItem .actions{
+    display:flex;
+    gap:8px;
+    margin-left:auto; /* trzyma akcje przy prawej krawędzi */
+    flex:0 0 auto;
+  }
+  .taskItem .actions button{
+    flex:0 0 auto;
+    padding:4px;
+    border-radius:6px;
+    border:none;
+    background:transparent;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .taskItem .actions button svg{
+    width:18px;
+    height:18px;
+  }
+  .taskItem .actions button:active{transform:scale(0.96);}
+  /* Drobne dopasowania mobilne */
+  @media (max-width:360px){
+    .card{width:280px;}
+    .controls button{font-size:1rem;}
+  }
 </style>
 </head>
 <body>
@@ -85,187 +95,235 @@ input#taskName{padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px s
     <div id="timerDisplay">00:00:00</div>
     <div class="controls">
       <button id="playBtn" title="Play">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#2b2b2b" xmlns="http://www.w3.org/2000/svg">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#2b2b2b" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <polygon points="5,3 19,12 5,21"/>
         </svg>
       </button>
       <button id="stopBtn" title="Stop">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#555555" xmlns="http://www.w3.org/2000/svg">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#555555" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="5" y="5" width="14" height="14"/>
         </svg>
       </button>
       <button id="resetBtn" title="Reset">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#888888" xmlns="http://www.w3.org/2000/svg">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#888888" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
         </svg>
       </button>
     </div>
-    <div class="taskList" id="taskList"></div>
+    <div class="taskList" id="taskList" aria-live="polite"></div>
   </div>
 </div>
 
 <script>
-const timerDisplay = document.getElementById('timerDisplay');
-const playBtn = document.getElementById('playBtn');
-const stopBtn = document.getElementById('stopBtn');
-const resetBtn = document.getElementById('resetBtn');
-const taskNameInput = document.getElementById('taskName');
-const taskListDiv = document.getElementById('taskList');
+  // ======= ELEMENTY DOM =======
+  const timerDisplay = document.getElementById('timerDisplay');
+  const playBtn = document.getElementById('playBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const taskNameInput = document.getElementById('taskName');
+  const taskListDiv = document.getElementById('taskList');
 
-let running = false;
-let startTs = null;
-let accMs = 0;
-let interval = null;
-let currentTask = null;
+  // ======= STAN TIMERA =======
+  let running = false;
+  let startTs = null;
+  let accMs = 0;
+  let interval = null;
+  let currentTask = null; // { id, name, duration }
 
-const STORAGE_KEY = 'work_timer_tasks';
+  const STORAGE_KEY = 'work_timer_tasks';
 
-function pad(n){ return String(n).padStart(2,'0'); }
-function msToHMS(ms){
-  const h=Math.floor(ms/3600000);
-  const m=Math.floor((ms%3600000)/60000);
-  const s=Math.floor((ms%60000)/1000);
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
-}
-
-function updateDisplay(){
-  const elapsed = accMs + (running && startTs ? Date.now() - startTs : 0);
-  timerDisplay.textContent = msToHMS(elapsed);
-}
-
-// ---- Timer actions ----
-function startTimer(){
-  if(running) return;
-  if(!currentTask) {
-    const name = taskNameInput.value.trim();
-    if(!name) { alert("Podaj nazwę zadania"); return; }
-    currentTask = { name, duration: accMs };
-  }
-  running = true;
-  startTs = Date.now();
-  playBtn.disabled = true;
-  interval = setInterval(updateDisplay, 250);
-}
-
-function stopTimer(){
-  if(!running) return;
-  accMs += Date.now() - startTs;
-  startTs = null;
-  running = false;
-  playBtn.disabled = false;
-  updateDisplay();
-  saveCurrentTask();
-}
-
-function resetTimer(){
-  running = false;
-  startTs = null;
-  accMs = 0;
-  interval && clearInterval(interval);
-  playBtn.disabled = false;
-  currentTask = null;
-  updateDisplay();
-}
-
-// ---- Task storage ----
-function loadTasks(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e){ return []; }
-}
-
-function saveTasks(tasks){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
-
-function saveCurrentTask(){
-  if(!currentTask) return;
-  currentTask.duration = accMs;
-  let tasks = loadTasks();
-  const idx = tasks.findIndex(t=>t.name===currentTask.name);
-  if(idx>=0){ tasks[idx] = currentTask; } else { tasks.push(currentTask); }
-  saveTasks(tasks);
-  renderTaskList();
-}
-
-function deleteTask(name){
-  let tasks = loadTasks();
-  tasks = tasks.filter(t => t.name !== name);
-  saveTasks(tasks);
-  renderTaskList();
-}
-
-
-// ---- Render ----
-function renderTaskList(){
-  const tasks = loadTasks();
-  taskListDiv.innerHTML = '';
-  tasks.forEach(t=>{
-    const div = document.createElement('div');
-    div.className='taskItem';
-
-    // tekst zadania
-    const span = document.createElement('span');
-    span.textContent = `${t.name} - ${msToHMS(t.duration)}`;
-    div.appendChild(span);
-
-    // kontener na ikony
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-
-    // ikona kontynuacji
-    // ikona kontynuacji
-const btnContinue = document.createElement('button');
-btnContinue.innerHTML = `
-  <svg viewBox="0 0 24 24" fill="#2b2b2b" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="5,3 19,12 5,21"/>
-  </svg>`;
-btnContinue.title = 'Kontynuuj';
-btnContinue.onclick = () => {
-  // przejmij dane zadania
-  currentTask = { ...t };
-  accMs = t.duration;
-
-  // jeśli stoper już działa – zatrzymaj
-  if (running) {
-    clearInterval(interval);
+  function generateId(){
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,9);
   }
 
-  // wystartuj od razu dalej
-  running = true;
-  startTs = Date.now();
-  playBtn.disabled = true;
-  interval = setInterval(updateDisplay, 250);
-};
-actions.appendChild(btnContinue);
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function msToHMS(ms){
+    const h=Math.floor(ms/3600000);
+    const m=Math.floor((ms%3600000)/60000);
+    const s=Math.floor((ms%60000)/1000);
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
 
+  function updateDisplay(){
+    const elapsed = accMs + (running && startTs ? Date.now() - startTs : 0);
+    timerDisplay.textContent = msToHMS(elapsed);
+  }
 
-    // ikona usuwania
-    const btnDelete = document.createElement('button');
-    btnDelete.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="#555555" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5a1 1 0 0 1-1 .5H7a1 1 0 0 1-1-.5L4 9zm5-5h6v2H9V4z"/>
-      </svg>`;
-    btnDelete.title = 'Usuń';
-    btnDelete.onclick = ()=>deleteTask(t.name);
-    actions.appendChild(btnDelete);
+  // ---- Timer actions ----
+  function startTimer(){
+    if(running) return;
+    // jeśli nie mamy bieżącego zadania, utwórz je z pola input
+    if(!currentTask){
+      const name = taskNameInput.value.trim();
+      if(!name) { alert("Podaj nazwę zadania"); return; }
+      currentTask = { id: generateId(), name, duration: accMs };
+    } else {
+      // synchronizuj nazwę z inputem, jeśli użytkownik wpisał coś nowego
+      const nameInput = taskNameInput.value.trim();
+      if(nameInput) currentTask.name = nameInput;
+      taskNameInput.value = currentTask.name;
+    }
 
-    div.appendChild(actions);
-    taskListDiv.appendChild(div);
+    running = true;
+    startTs = Date.now();
+    playBtn.disabled = true;
+    // usuń ewentualny poprzedni interval
+    if(interval) clearInterval(interval);
+    interval = setInterval(updateDisplay, 250);
+  }
+
+  function stopTimer(){
+    if(!running) return;
+    // uaktualnij czas
+    accMs += Date.now() - startTs;
+    startTs = null;
+    running = false;
+    playBtn.disabled = false;
+    if(interval){ clearInterval(interval); interval = null; }
+    updateDisplay();
+
+    // synchronizuj nazwę z input (jeśli zmieniona)
+    if(currentTask){
+      const nameInput = taskNameInput.value.trim();
+      if(nameInput) currentTask.name = nameInput;
+    }
+
+    saveCurrentTask();
+  }
+
+  function resetTimer(){
+    running = false;
+    startTs = null;
+    accMs = 0;
+    if(interval){ clearInterval(interval); interval = null; }
+    playBtn.disabled = false;
+    currentTask = null;
+    taskNameInput.value = '';
+    updateDisplay();
+  }
+
+  // ---- Task storage ----
+  function loadTasks(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ return []; }
+  }
+
+  function saveTasks(tasks){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }
+
+  function saveCurrentTask(){
+    if(!currentTask) return;
+    currentTask.duration = accMs;
+    let tasks = loadTasks();
+    const idx = tasks.findIndex(t=>t.id===currentTask.id);
+    const entry = { id: currentTask.id, name: currentTask.name, duration: currentTask.duration };
+    if(idx>=0){ tasks[idx] = entry; } else { tasks.push(entry); }
+    saveTasks(tasks);
+    renderTaskList();
+  }
+
+  function deleteTask(id){
+    let tasks = loadTasks();
+    tasks = tasks.filter(t => t.id !== id);
+    saveTasks(tasks);
+
+    // jeśli usuwamy aktualnie edytowane/uruchomione zadanie — zatrzymaj i wyczyść
+    if(currentTask && currentTask.id === id){
+      if(running){
+        // przestań bez zapisu (już usunięty)
+        running = false;
+        startTs = null;
+        if(interval){ clearInterval(interval); interval = null; }
+        playBtn.disabled = false;
+      }
+      currentTask = null;
+      accMs = 0;
+      taskNameInput.value = '';
+      updateDisplay();
+    }
+
+    renderTaskList();
+  }
+
+  // ---- Render listy z ikonami ----
+  function renderTaskList(){
+    const tasks = loadTasks();
+    taskListDiv.innerHTML = '';
+    tasks.forEach(t=>{
+      const div = document.createElement('div');
+      div.className='taskItem';
+
+      const span = document.createElement('div');
+      span.className = 'text';
+      span.textContent = `${t.name} - ${msToHMS(t.duration)}`;
+      div.appendChild(span);
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      // ikona kontynuacji (play) - teraz ustawia nazwę i startuje licznik
+      const btnContinue = document.createElement('button');
+      btnContinue.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="#2b2b2b" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>`;
+      btnContinue.title = 'Kontynuuj';
+      btnContinue.onclick = ()=>{
+        // jeśli inny timer działa - zapisz go (stopTimer zapisze go)
+        if(running && currentTask && currentTask.id !== t.id){
+          stopTimer();
+        } else if(running && currentTask && currentTask.id === t.id){
+          // jeśli klikamy play na tym samym już uruchomionym zadaniu — nic nie rób
+          return;
+        }
+
+        // ustaw bieżące zadanie i uruchom licznik
+        currentTask = { id: t.id, name: t.name, duration: t.duration };
+        accMs = t.duration;
+        taskNameInput.value = t.name;
+        startTimer();
+        updateDisplay();
+      };
+      actions.appendChild(btnContinue);
+
+      // ikona usuwania (kosz)
+      const btnDelete = document.createElement('button');
+      btnDelete.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="#555555" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5a1 1 0 0 1-1 .5H7a1 1 0 0 1-1-.5L4 9zm5-5h6v2H9V4z"/>
+        </svg>`;
+      btnDelete.title = 'Usuń';
+      btnDelete.onclick = ()=> deleteTask(t.id);
+      actions.appendChild(btnDelete);
+
+      div.appendChild(actions);
+      taskListDiv.appendChild(div);
+    });
+  }
+
+  // ---- Event listeners ----
+  playBtn.addEventListener('click', startTimer);
+  stopBtn.addEventListener('click', stopTimer);
+  resetBtn.addEventListener('click', resetTimer);
+
+  // przed zamknięciem strony: zapisz aktualny stan (uwzględnij bieżący upływ czasu)
+  window.addEventListener('beforeunload', ()=>{
+    if(running){
+      accMs += Date.now() - startTs;
+      startTs = null;
+      running = false;
+      if(interval){ clearInterval(interval); interval = null; }
+      playBtn.disabled = false;
+    }
+    saveCurrentTask();
   });
-}
 
-
-
-// ---- Event listeners ----
-playBtn.addEventListener('click', startTimer);
-stopBtn.addEventListener('click', stopTimer);
-resetBtn.addEventListener('click', resetTimer);
-window.addEventListener('beforeunload', ()=>{ saveCurrentTask(); });
-
-renderTaskList();
-updateDisplay();
+  // inicjalizacja
+  renderTaskList();
+  updateDisplay();
 </script>
 </body>
 </html>
