@@ -158,6 +158,14 @@ function saveCurrentTask(){
   renderTaskList();
 }
 
+  function deleteTask(name){
+  let tasks = loadTasks();
+  tasks = tasks.filter(t => t.name !== name);
+  saveTasks(tasks);
+  renderTaskList();
+}
+
+
 // ---- Render ----
 function renderTaskList(){
   const tasks = loadTasks();
@@ -165,18 +173,32 @@ function renderTaskList(){
   tasks.forEach(t=>{
     const div = document.createElement('div');
     div.className='taskItem';
-    div.innerHTML = `<span>${t.name} - ${msToHMS(t.duration)}</span>`;
-    const btn = document.createElement('button');
-    btn.textContent = 'Continue';
-    btn.onclick = ()=>{
+
+    const span = document.createElement('span');
+    span.textContent = `${t.name} - ${msToHMS(t.duration)}`;
+    div.appendChild(span);
+
+    // przycisk kontynuacji
+    const btnContinue = document.createElement('button');
+    btnContinue.textContent = 'Continue';
+    btnContinue.onclick = ()=>{
       accMs = t.duration;
       currentTask = {...t};
       updateDisplay();
     };
-    div.appendChild(btn);
+    div.appendChild(btnContinue);
+
+    // przycisk usuwania
+    const btnDelete = document.createElement('button');
+    btnDelete.textContent = 'Usuń';
+    btnDelete.style.background = '#aa0000';
+    btnDelete.onclick = ()=>deleteTask(t.name);
+    div.appendChild(btnDelete);
+
     taskListDiv.appendChild(div);
   });
 }
+
 
 // ---- Event listeners ----
 playBtn.addEventListener('click', startTimer);
