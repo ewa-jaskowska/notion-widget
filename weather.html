@@ -1,34 +1,49 @@
 <!doctype html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Notion Weather Widget (Open-Meteo)</title>
+  <title>Notion Weather Widget (Open-Meteo — Daily)</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#60a5fa}
-    *{box-sizing:border-box;font-family:Inter,Segoe UI,Roboto,system-ui,Arial}
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071029 0%, #021124 100%);color:#e6eef6}
-    .widget{width:100%;max-width:420px;padding:16px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));backdrop-filter:blur(6px);box-shadow:0 6px 30px rgba(2,6,23,0.6)}
+    /* Color palette inspired by https://ewa-jaskowska.github.io/notion-widget/stoper.html */
+    :root{
+      --bg:#0b1020; /* deep navy */
+      --card:#0f1724; /* slightly lighter */
+      --muted:#a9b6c8; /* pale steel */
+      --accent:#6ee7b7; /* mint-ish */
+      --accent-2:#7dd3fc; /* sky-ish */
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg) 0%, #071226 100%);color:#e6eef6}
+
+    .widget{width:100%;max-width:460px;padding:16px;border-radius:14px;background:linear-gradient(180deg,var(--glass),var(--glass-2));backdrop-filter:blur(6px);box-shadow:0 8px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
     .top{display:flex;align-items:center;justify-content:space-between}
     .left{display:flex;gap:12px;align-items:center}
-    .city{font-size:1.05rem;font-weight:600}
+    .city{font-size:1.05rem;font-weight:700}
     .time{font-size:0.85rem;color:var(--muted)}
 
-    .temp{font-size:2.8rem;font-weight:700}
+    .temp{font-size:2.6rem;font-weight:800}
     .desc{font-size:0.95rem;color:var(--muted);text-transform:capitalize}
-    .icon{width:72px;height:72px}
+    .icon{width:64px;height:64px}
 
     .controls{margin-top:12px;display:flex;gap:8px}
-    input.city-input{flex:1;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
-    button{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#04263b;font-weight:600;cursor:pointer}
+    input.city-input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    button{padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#04263b;font-weight:700;cursor:pointer}
     .meta{display:flex;gap:12px;margin-top:12px;color:var(--muted);font-size:0.9rem}
-    .forecast{display:flex;gap:8px;overflow:auto;margin-top:12px}
-    .fc-card{min-width:64px;padding:8px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.015),transparent);text-align:center}
-    .small{font-size:0.8rem;color:var(--muted)}
+
+    .forecast{display:flex;gap:10px;overflow:auto;margin-top:14px;padding-bottom:6px}
+    .day-card{min-width:84px;padding:10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.015),transparent);text-align:center;border:1px solid rgba(255,255,255,0.02)}
+    .day-name{font-weight:700;margin-bottom:6px}
+    .small{font-size:0.82rem;color:var(--muted)}
     .error{color:#ffb4b4;margin-top:8px}
     footer{font-size:0.75rem;color:var(--muted);margin-top:12px}
 
-    @media(max-width:420px){.widget{padding:12px}}
+    .actions{display:flex;gap:8px;margin-top:10px}
+    .muted-btn{padding:8px 10px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted);cursor:pointer}
+
+    @media(max-width:480px){.widget{padding:12px}.temp{font-size:2.2rem}}
   </style>
 </head>
 <body>
@@ -47,162 +62,44 @@
     </div>
 
     <div class="controls">
-      <input class="city-input" id="cityInput" placeholder="Wpisz miasto (np. Warszawa)" />
-      <button id="searchBtn">Szukaj</button>
+      <input class="city-input" id="cityInput" placeholder="Enter city (e.g. Warsaw)" />
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <div class="actions">
+      <button id="locBtn" class="muted-btn">Use my location</button>
+      <button id="refreshBtn" class="muted-btn">Refresh</button>
     </div>
 
     <div class="meta">
-      <div id="humidity">Wilgotność: —</div>
-      <div id="wind">Wiatr: —</div>
-      <div id="pressure">Ciśnienie: —</div>
+      <div id="humidity">Humidity: —</div>
+      <div id="wind">Wind: —</div>
+      <div id="pressure">Pressure: —</div>
     </div>
 
     <div class="forecast" id="forecast" aria-hidden="true"></div>
 
     <div class="error" id="error"></div>
 
-    <footer>Źródło: Open-Meteo (bez klucza API). Geokodowanie: geocoding-api.open-meteo.com</footer>
+    <footer>Source: Open-Meteo (no API key). Daily forecast.</footer>
   </div>
 
 <script>
-// === USTAWIENIA ===
-const DEFAULT_CITY = 'Warszawa';
-const FORECAST_HOURS = 6;
+// === SETTINGS ===
+const DEFAULT_CITY = 'Warsaw';
+const FORECAST_DAYS = 7; // number of daily entries to show
 
 // === UTIL ===
 function el(id){return document.getElementById(id)}
-function fmtTimeISO(dtStr, tz){
+function fmtDateISO(dateStr){
   try{
-    const d = new Date(dtStr);
-    return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  }catch(e){return dtStr}
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString(undefined, {weekday:'short',month:'short',day:'numeric'});
+  }catch(e){return dateStr}
 }
 
-// map Open-Meteo weathercode -> description + simple emoji
+// Open-Meteo weather code -> English description + emoji
 const weatherCodeMap = {
-  0: ['Jasne', '☀️'],
-  1: ['Częściowo słonecznie', '🌤️'],
-  2: ['Częściowo chmurnie', '⛅'],
-  3: ['Pochmurno', '☁️'],
-  45: ['Mgła', '🌫️'],
-  48: ['Osadzanie mgliste', '🌫️'],
-  51: ['Lekka mżawka', '🌦️'],
-  53: ['Umiarkowana mżawka', '🌦️'],
-  55: ['Gęsta mżawka', '🌧️'],
-  56: ['Lodowa mżawka', '🌧️❄️'],
-  57: ['Gęsta lodowa mżawka', '🌧️❄️'],
-  61: ['Lekki deszcz', '🌧️'],
-  63: ['Umiarkowany deszcz', '🌧️'],
-  65: ['Silny deszcz', '🌧️'],
-  66: ['Lekki śnieg z deszczem', '🌨️🌧️'],
-  67: ['Silny śnieg z deszczem', '🌨️🌧️'],
-  71: ['Lekki śnieg', '❄️'],
-  73: ['Umiarkowany śnieg', '❄️'],
-  75: ['Silny śnieg', '❄️'],
-  77: ['Ziarna śniegu', '❄️'],
-  80: ['Przelotny deszcz', '🌦️'],
-  81: ['Przelotne opady', '🌧️'],
-  82: ['Silne przelotne opady', '⛈️'],
-  85: ['Przelotny śnieg', '🌨️'],
-  86: ['Silne przelotne opady śniegu', '🌨️'],
-  95: ['Burza', '⛈️'],
-  96: ['Burza z gradem (lekka)', '⛈️🌨️'],
-  99: ['Burza z gradem (silna)', '⛈️🌨️']
-};
-
-function codeToDesc(code){
-  return weatherCodeMap[code] ? weatherCodeMap[code] : ['Nieznane', '🌈'];
-}
-
-// === GEOKODOWANIE (Open-Meteo publiczne) ===
-async function geocode(city){
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pl&format=json`;
-  const res = await fetch(url);
-  if(!res.ok) throw new Error('Błąd geokodowania');
-  const data = await res.json();
-  if(!data || !data.results || data.results.length===0) throw new Error('Nie znaleziono miasta');
-  return data.results[0];
-}
-
-async function fetchWeather(lat, lon, timezone='auto'){
-  // pobieramy current_weather + hourly dla najbliższych godzin (temperatura, weathercode, relativehumidity_2m, surface_pressure, windspeed_10m)
-  const params = new URLSearchParams({
-    latitude: lat,
-    longitude: lon,
-    timezone: timezone,
-    current_weather: 'true',
-    hourly: 'temperature_2m,weathercode,relativehumidity_2m,pressure_msl,windspeed_10m',
-    forecast_days: 1
-  });
-  const url = `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
-  const res = await fetch(url);
-  if(!res.ok) throw new Error('Błąd pobierania pogody');
-  return await res.json();
-}
-
-// === RENDER ===
-function renderCurrent(locationName, geo, data){
-  const cw = data.current_weather;
-  el('city').textContent = `${locationName}${geo.country ? (', '+geo.country):''}`;
-  el('time').textContent = `Aktualne: ${fmtTimeISO(cw.time)}`;
-  el('temp').textContent = Math.round(cw.temperature) + '°C';
-  const [desc, emoji] = codeToDesc(cw.weathercode);
-  el('desc').textContent = `${desc} ${emoji}`;
-
-  // humidity / pressure / wind from hourly arrays (find nearest index)
-  const times = data.hourly.time;
-  const idx = times.indexOf(cw.time);
-  if(idx>=0){
-    const rh = data.hourly.relativehumidity_2m[idx];
-    const pres = data.hourly.pressure_msl ? data.hourly.pressure_msl[idx] : '—';
-    const wind = data.hourly.windspeed_10m[idx];
-    el('humidity').textContent = `Wilgotność: ${rh}%`;
-    el('pressure').textContent = `Ciśnienie: ${Math.round(pres)} hPa`;
-    el('wind').textContent = `Wiatr: ${Math.round(wind)} m/s`;
-  } else {
-    el('humidity').textContent = `Wilgotność: —`;
-    el('pressure').textContent = `Ciśnienie: —`;
-    el('wind').textContent = `Wiatr: ${Math.round(cw.windspeed || 0)} m/s`;
-  }
-
-  // forecast
-  const fc = el('forecast'); fc.innerHTML='';
-  for(let i=0;i<FORECAST_HOURS;i++){
-    const t = data.hourly.time[i];
-    if(!t) break;
-    const temp = data.hourly.temperature_2m[i];
-    const wc = data.hourly.weathercode[i];
-    const [d, em] = codeToDesc(wc);
-    const div = document.createElement('div'); div.className='fc-card';
-    div.innerHTML = `<div class="small">${fmtTimeISO(t)}</div>
-                     <div style="font-size:1.2rem">${em}</div>
-                     <div style="font-weight:700">${Math.round(temp)}°</div>
-                     <div class="small">${d}</div>`;
-    fc.appendChild(div);
-  }
-}
-
-// === MAIN ===
-async function updateForCity(city){
-  el('error').textContent='';
-  try{
-    const g = await geocode(city);
-    const w = await fetchWeather(g.latitude, g.longitude, g.timezone || 'auto');
-    renderCurrent(`${g.name}${g.admin1 ? (', '+g.admin1):''}`, g, w);
-  }catch(err){
-    el('error').textContent = err.message || 'Wystąpił błąd';
-  }
-}
-
-// UI
-document.getElementById('searchBtn').addEventListener('click', ()=>{
-  const v = document.getElementById('cityInput').value.trim();
-  if(v) updateForCity(v);
-});
-document.getElementById('cityInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') document.getElementById('searchBtn').click(); });
-
-// init
-updateForCity(DEFAULT_CITY);
-</script>
-</body>
-</html>
+  0: ['Clear sky','☀️'],
+  1: ['Mainly clear','🌤️'],
+  2: ['Partly cloudy','⛅
