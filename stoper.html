@@ -215,18 +215,31 @@ function renderTaskList(){
     actions.className = 'actions';
 
     // ikona kontynuacji
-    const btnContinue = document.createElement('button');
-    btnContinue.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="#2b2b2b" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="5,3 19,12 5,21"/>
-      </svg>`;
-    btnContinue.title = 'Kontynuuj';
-    btnContinue.onclick = ()=>{
-      accMs = t.duration;
-      currentTask = {...t};
-      updateDisplay();
-    };
-    actions.appendChild(btnContinue);
+    // ikona kontynuacji
+const btnContinue = document.createElement('button');
+btnContinue.innerHTML = `
+  <svg viewBox="0 0 24 24" fill="#2b2b2b" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="5,3 19,12 5,21"/>
+  </svg>`;
+btnContinue.title = 'Kontynuuj';
+btnContinue.onclick = () => {
+  // przejmij dane zadania
+  currentTask = { ...t };
+  accMs = t.duration;
+
+  // jeśli stoper już działa – zatrzymaj
+  if (running) {
+    clearInterval(interval);
+  }
+
+  // wystartuj od razu dalej
+  running = true;
+  startTs = Date.now();
+  playBtn.disabled = true;
+  interval = setInterval(updateDisplay, 250);
+};
+actions.appendChild(btnContinue);
+
 
     // ikona usuwania
     const btnDelete = document.createElement('button');
