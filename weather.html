@@ -1,160 +1,67 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Notion Weather Widget (Open-Meteo — Daily, Gray)</title>
-  <style>
-    /* Gray-scale color palette */
-    :root{
-      --bg:#1a1a1a;
-      --card:#2c2c2c;
-      --muted:#b0b0b0;
-      --accent:#e0e0e0;
-      --glass: rgba(255,255,255,0.02);
-      --glass-2: rgba(255,255,255,0.01);
-    }
-    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
-    html,body{height:100%;margin:0;background:var(--bg);color:#f0f0f0}
-
-    .widget{width:100%;max-width:460px;padding:16px;border-radius:14px;background:var(--card);box-shadow:0 8px 30px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.05)}
-    .top{display:flex;align-items:center;justify-content:space-between}
-    .city{font-size:1.05rem;font-weight:700}
-    .time{font-size:0.85rem;color:var(--muted)}
-
-    .temp{font-size:2.6rem;font-weight:800}
-    .desc{font-size:0.95rem;color:var(--muted);text-transform:capitalize}
-    .icon{width:48px;height:48px;vertical-align:middle}
-
-    .controls{margin-top:12px;display:flex;gap:8px}
-    input.city-input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-    button{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:#1a1a1a;font-weight:700;cursor:pointer}
-
-    .forecast{display:flex;gap:10px;overflow:auto;margin-top:14px;padding-bottom:6px}
-    .day-card{min-width:84px;padding:10px;border-radius:12px;background:var(--bg);text-align:center;border:1px solid rgba(255,255,255,0.05)}
-    .day-name{font-weight:700;margin-bottom:6px;color:var(--muted)}
-    .small{font-size:0.82rem;color:var(--muted)}
-    .error{color:#ff8080;margin-top:8px}
-    footer{font-size:0.75rem;color:var(--muted);margin-top:12px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Notion Weather Widget (Daily, Gray-White Theme, Emoji)</title>
+<style>
+/* Layout and color palette inspired by the provided style */
+body, html{height:100%;margin:0;display:flex;align-items:center;justify-content:center;background:#f2f2f2;font-family:Inter,system-ui,sans-serif}
+.widget{background:linear-gradient(135deg,#f0f0f0,#d6d6d6);border-radius:16px;padding:20px;width:320px;box-shadow:0 8px 20px rgba(0,0,0,0.1);text-align:center}
+.city{font-size:1rem;font-weight:600;color:#3a3a3a;margin-bottom:10px}
+.time{font-size:0.85rem;color:#555555;margin-bottom:12px}
+.temp{font-size:2rem;margin:10px 0;color:#2b2b2b;font-weight:700}
+.desc{font-size:0.95rem;color:#555555;margin-bottom:14px}
+input.city-input{padding:6px 8px;margin-bottom:10px;border-radius:8px;border:1px solid #ccc;font-size:0.95rem;width:100%;box-sizing:border-box}
+button{flex:1;padding:8px 0;border-radius:10px;border:none;font-weight:600;cursor:pointer;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.05);transition:0.1s;font-size:1.1rem;margin-top:6px}
+button:hover{transform:translateY(-1px)}
+.forecast{display:flex;gap:10px;overflow:auto;margin-top:14px;padding-bottom:6px}
+.day-card{min-width:84px;padding:10px;border-radius:12px;background:#e0e0e0;text-align:center}
+.day-name{font-weight:700;margin-bottom:6px;color:#555555}
+.small{font-size:0.82rem;color:#555555}
+.error{color:#ff8080;margin-top:8px}
+footer{font-size:0.75rem;color:#555555;margin-top:12px}
+</style>
 </head>
 <body>
 <div class="widget" id="widget">
-  <div class="top">
-    <div>
-      <div class="city" id="city">—</div>
-      <div class="time" id="time">—</div>
-    </div>
-    <div style="text-align:right">
-      <div class="temp" id="temp">—</div>
-      <div class="desc" id="desc">—</div>
-    </div>
-  </div>
-
-  <div class="controls">
-    <input class="city-input" id="cityInput" placeholder="Enter city (e.g. Warsaw)" />
-    <button id="searchBtn">Search</button>
-  </div>
-
-  <div class="forecast" id="forecast" aria-hidden="true"></div>
-  <div class="error" id="error"></div>
-  <footer>Source: Open-Meteo (no API key). Daily forecast.</footer>
+<div class="city" id="city">—</div>
+<div class="time" id="time">—</div>
+<div class="temp" id="temp">—</div>
+<div class="desc" id="desc">—</div>
+<input class="city-input" id="cityInput" placeholder="Enter city (e.g. Warsaw)" />
+<button id="searchBtn">Search</button>
+<div class="forecast" id="forecast"></div>
+<div class="error" id="error"></div>
+<footer>Source: Open-Meteo (no API key). Daily forecast.</footer>
 </div>
-
 <script>
-const DEFAULT_CITY = 'Warsaw';
-const FORECAST_DAYS = 7;
-
+const DEFAULT_CITY='Warsaw';
+const FORECAST_DAYS=7;
 function el(id){return document.getElementById(id)}
-function fmtDateISO(dateStr){
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString(undefined, {weekday:'short',month:'short',day:'numeric'});
-}
-
-// Mapping Open-Meteo code to description + SVG icon
-const weatherCodeMap = {
-  0: ['Clear sky','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="none" stroke="currentColor" stroke-width="4"/></svg>'],
-  1: ['Mainly clear','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="none" stroke="currentColor" stroke-width="4"/></svg>'],
-  2: ['Partly cloudy','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><ellipse cx="32" cy="36" rx="18" ry="10" fill="none" stroke="currentColor" stroke-width="4"/></svg>'],
-  3: ['Overcast','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><ellipse cx="32" cy="36" rx="22" ry="12" fill="none" stroke="currentColor" stroke-width="4"/></svg>'],
-  45: ['Fog','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><line x1="16" y1="32" x2="48" y2="32" stroke="currentColor" stroke-width="4"/></svg>'],
-  61: ['Slight rain','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><line x1="24" y1="40" x2="24" y2="50" stroke="currentColor" stroke-width="4"/><line x1="32" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="4"/><line x1="40" y1="40" x2="40" y2="50" stroke="currentColor" stroke-width="4"/></svg>'],
-  95: ['Thunderstorm','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><polygon points="28,32 36,32 30,44 38,44" fill="none" stroke="currentColor" stroke-width="4"/></svg>']
-};
-function codeToDesc(code){return weatherCodeMap[code] || ['Unknown','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="none" stroke="currentColor" stroke-width="4"/></svg>'];}
-
+function fmtDateISO(dateStr){const d=new Date(dateStr+'T00:00:00');return d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}
+// Mapping weather code to English description + emoji
+const weatherCodeMap={0:['Clear sky','☀️'],1:['Mainly clear','🌤️'],2:['Partly cloudy','⛅'],3:['Overcast','☁️'],45:['Fog','🌫️'],61:['Slight rain','🌧️'],95:['Thunderstorm','⛈️']};
+function codeToDesc(code){return weatherCodeMap[code]||['Unknown','🌈']}
 async function geocode(city){
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
-  const res = await fetch(url);
-  if(!res.ok) throw new Error('Geocoding error');
-  const data = await res.json();
-  if(!data.results || data.results.length===0) throw new Error('City not found');
-  return data.results[0];
+const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+const res=await fetch(url);
+if(!res.ok)throw new Error('Geocoding error');
+const data=await res.json();
+if(!data.results||data.results.length===0)throw new Error('City not found');
+return data.results[0];
 }
-
-async function fetchWeather(lat, lon, timezone='auto'){
-  const params = new URLSearchParams({
-    latitude: lat,
-    longitude: lon,
-    timezone: timezone,
-    daily: 'temperature_2m_max,temperature_2m_min,weathercode',
-    forecast_days: FORECAST_DAYS
-  });
-  const url = `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
-  const res = await fetch(url);
-  if(!res.ok) throw new Error('Weather fetch error');
-  return await res.json();
+async function fetchWeather(lat,lon,timezone='auto'){
+const params=new URLSearchParams({latitude:lat,longitude:lon,timezone:timezone,daily:'temperature_2m_max,temperature_2m_min,weathercode',forecast_days:FORECAST_DAYS});
+const url=`https://api.open-meteo.com/v1/forecast?${params.toString()}`;
+const res=await fetch(url);
+if(!res.ok)throw new Error('Weather fetch error');
+return await res.json();
 }
-
-async function updateForCity(city){
-  el('error').textContent='';
-  try{
-    const g = await geocode(city);
-    const w = await fetchWeather(g.latitude, g.longitude, g.timezone || 'auto');
-    renderCurrent(`${g.name}${g.admin1 ? (', '+g.admin1):''}`, g, w);
-  }catch(err){
-    el('error').textContent = err.message;
-  }
-}
-
-function renderCurrent(locationName, geo, data){
-  const todayIdx = 0;
-  el('city').textContent = `${locationName}${geo.country ? (', '+geo.country):''}`;
-  el('time').textContent = `Updated: ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
-
-  const tmax = data.daily.temperature_2m_max[todayIdx];
-  const tmin = data.daily.temperature_2m_min[todayIdx];
-  const wc = data.daily.weathercode[todayIdx];
-  const [desc, svg] = codeToDesc(wc);
-
-  el('temp').innerHTML = `${Math.round(tmax)}° / ${Math.round(tmin)}° <span class='icon'>${svg}</span>`;
-  el('desc').textContent = desc;
-
-  const fc = el('forecast'); fc.innerHTML='';
-  const days = data.daily.time;
-  for(let i=0;i<days.length;i++){
-    const dateStr = days[i];
-    const tmaxD = data.daily.temperature_2m_max[i];
-    const tminD = data.daily.temperature_2m_min[i];
-    const wcD = data.daily.weathercode[i];
-    const [dDesc, svgD] = codeToDesc(wcD);
-    const div = document.createElement('div'); div.className='day-card';
-    div.innerHTML = `
-      <div class="day-name">${fmtDateISO(dateStr)}</div>
-      <div class="icon">${svgD}</div>
-      <div style="font-weight:700">${Math.round(tmaxD)}° / ${Math.round(tminD)}°</div>
-      <div class="small">${dDesc}</div>
-    `;
-    fc.appendChild(div);
-  }
-}
-
-el('searchBtn').addEventListener('click', ()=>{
-  const v = el('cityInput').value.trim();
-  if(v) updateForCity(v);
-});
-el('cityInput').addEventListener('keydown', (e)=>{if(e.key==='Enter') el('searchBtn').click();});
-
+async function updateForCity(city){el('error').textContent='';try{const g=await geocode(city);const w=await fetchWeather(g.latitude,g.longitude,g.timezone||'auto');renderCurrent(`${g.name}${g.admin1?(", "+g.admin1):''}`,g,w);}catch(err){el('error').textContent=err.message;}}
+function renderCurrent(locationName,geo,data){const todayIdx=0;el('city').textContent=`${locationName}${geo.country?(', '+geo.country):''}`;el('time').textContent=`Updated: ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;const tmax=data.daily.temperature_2m_max[todayIdx];const tmin=data.daily.temperature_2m_min[todayIdx];const wc=data.daily.weathercode[todayIdx];const [desc,emoji]=codeToDesc(wc);el('temp').textContent=`${Math.round(tmax)}° / ${Math.round(tmin)}°`;el('desc').textContent=desc+' '+emoji;const fc=el('forecast');fc.innerHTML='';const days=data.daily.time;for(let i=0;i<days.length;i++){const dateStr=days[i];const tmaxD=data.daily.temperature_2m_max[i];const tminD=data.daily.temperature_2m_min[i];const wcD=data.daily.weathercode[i];const [dDesc,dEmoji]=codeToDesc(wcD);const div=document.createElement('div');div.className='day-card';div.innerHTML=`<div class="day-name">${fmtDateISO(dateStr)}</div><div style="font-size:1.2rem">${dEmoji}</div><div style="font-weight:700">${Math.round(tmaxD)}° / ${Math.round(tminD)}°</div><div class="small">${dDesc}</div>`;fc.appendChild(div);}}
+el('searchBtn').addEventListener('click',()=>{const v=el('cityInput').value.trim();if(v)updateForCity(v);});
+el('cityInput').addEventListener('keydown',(e)=>{if(e.key==='Enter')el('searchBtn').click();});
 updateForCity(DEFAULT_CITY);
 </script>
 </body>
